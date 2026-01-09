@@ -15,7 +15,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import r2_score
 import matplotlib.pyplot as plt
 
-# Device Configuration for 2026 environments
+# Device Configuration
 def get_device():
     if torch.backends.mps.is_available():
         return torch.device("mps")
