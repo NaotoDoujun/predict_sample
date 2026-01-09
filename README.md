@@ -5,6 +5,11 @@ This project provides a complete workflow for numerical prediction using Excel d
 * torch 2.9.1
 * scikit-learn 1.8.0
 
+### Install
+```bash
+pip install -r requirements.txt
+```
+
 ## 1. Synthetic Data Generator
 A program to generate optimal sample data for AI model testing and save it in Excel format.
 * Description: Creates a structured dataset with 48 features and a target variable based on linear relationships with Gaussian noise.
