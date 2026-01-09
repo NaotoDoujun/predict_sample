@@ -162,7 +162,7 @@ ax1.grid(True, alpha=0.3)
 # Actual vs Predicted
 ax2.scatter(y_test, y_pred, alpha=0.5, edgecolors='k', color='teal')
 ax2.plot([y_test.min(), y_test.max()], [y_test.min(), y_test.max()], 'r--', lw=2)
-ax2.set_title(f'NN Regression: Actual vs Predicted\n(R² = {r2_clean:.4f})', fontsize=12)
+ax2.set_title(f'NN Regression: Actual vs Predicted\n(Clean R² = {r2_clean:.4f})', fontsize=12)
 ax2.set_xlabel('Actual Values')
 ax2.set_ylabel('Predicted Values')
 ax2.grid(True, alpha=0.3)

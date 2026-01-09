@@ -91,7 +91,7 @@ ax1.grid(axis='x', linestyle='--', alpha=0.6)
 ax2.scatter(y_test, y_pred, alpha=0.5, color='teal', edgecolors='white', s=50)
 line_coords = [min(y_test.min(), y_pred.min()), max(y_test.max(), y_pred.max())]
 ax2.plot(line_coords, line_coords, 'r--', lw=2, label='Ideal (y=x)')
-ax2.set_title(f'RF Regression: Actual vs Predicted\n(R² = {r2:.3f})', fontsize=12)
+ax2.set_title(f'RF Regression: Actual vs Predicted\n(Clean R² = {r2_clean:.4f})', fontsize=12)
 ax2.set_xlabel('Actual Values')
 ax2.set_ylabel('Predicted Values')
 ax2.legend()
