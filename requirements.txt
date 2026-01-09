@@ -1,0 +1,10 @@
+###### Requirements without Version Specifiers ######
+pandas
+openpyxl
+japanize-matplotlib
+#
+###### Requirements with Version Specifiers ######
+#   See https://www.python.org/dev/peps/pep-0440/#version-specifiers
+torch == 2.9.1
+scikit-learn == 1.8.0
+matplotlib == 3.10.8
