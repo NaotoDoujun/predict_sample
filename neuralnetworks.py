@@ -40,8 +40,8 @@ args = parser.parse_args()
 try:
     with pd.ExcelFile(args.file) as xls:
         sheet_name = args.sheet if args.sheet in xls.sheet_names else xls.sheet_names[0]
-        df = pd.read_excel(xls, sheet_name=sheet_name).dropna() # Handle missing values
-        print(f"Dataset loaded: {df.shape[0]} samples, {df.shape[1]-1} features")
+        df = pd.read_excel(xls, sheet_name=sheet_name).dropna()
+        print(f"Loaded: {args.file} [{sheet_name}] | Shape: {df.shape}")
 except Exception as e:
     print(f"Error loading file: {e}")
     sys.exit(1)
@@ -89,27 +89,35 @@ criterion = nn.MSELoss()
 optimizer = optim.Adam(model.parameters(), lr=args.lr)
 scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=5, factor=0.5)
 
+history = {'train_loss': [], 'val_loss': []}
+
 # Training Loop
 print("Starting training...")
 for epoch in range(args.epochs):
     model.train()
-    train_loss = 0
+    train_loss_accum = 0
     for batch_x, batch_y in train_loader:
         optimizer.zero_grad()
         loss = criterion(model(batch_x), batch_y)
         loss.backward()
         optimizer.step()
-        train_loss += loss.item()
+        train_loss_accum += loss.item()
+
+    avg_train_loss = train_loss_accum / len(train_loader)
     
     # Validation
     model.eval()
     with torch.no_grad():
         val_outputs = model(X_test_t)
-        val_loss = criterion(val_outputs, y_test_t)
-        scheduler.step(val_loss)
+        v_loss = criterion(val_outputs, y_test_t)
+        scheduler.step(v_loss)
+        val_loss_val = v_loss.item()
+
+    history['train_loss'].append(avg_train_loss)
+    history['val_loss'].append(val_loss_val)
     
     if (epoch + 1) % 10 == 0:
-        print(f'Epoch [{epoch+1}/{args.epochs}] | Train Loss: {train_loss/len(train_loader):.4f} | Val Loss: {val_loss:.4f}')
+        print(f'Epoch [{epoch+1}/{args.epochs}] | Train Loss: {avg_train_loss:.4f} | Val Loss: {val_loss_val:.4f}')
 
 # Save the trained model
 torch.save({
@@ -130,11 +138,24 @@ with torch.no_grad():
 print(f"\nFinal Evaluation:\nR2 Score: {r2:.4f}")
 
 # Visualization
-plt.figure(figsize=(10, 6))
-plt.scatter(y_test, y_pred, alpha=0.5, edgecolors='k')
-plt.plot([y_test.min(), y_test.max()], [y_test.min(), y_test.max()], 'r--', lw=2)
-plt.title(f'NN Regression: Actual vs Predicted (R² = {r2:.4f})\nRunning on {device.type.upper()}')
-plt.xlabel('Actual Values')
-plt.ylabel('Predicted Values')
-plt.grid(True, alpha=0.3)
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))
+
+# Learning Curve
+ax1.plot(history['train_loss'], label='Train Loss', color='blue', lw=1.5)
+ax1.plot(history['val_loss'], label='Validation Loss', color='orange', lw=1.5)
+ax1.set_title('Model Loss Progression', fontsize=12)
+ax1.set_xlabel('Epochs')
+ax1.set_ylabel('MSE Loss')
+ax1.legend()
+ax1.grid(True, alpha=0.3)
+
+# Actual vs Predicted
+ax2.scatter(y_test, y_pred, alpha=0.5, edgecolors='k', color='teal')
+ax2.plot([y_test.min(), y_test.max()], [y_test.min(), y_test.max()], 'r--', lw=2)
+ax2.set_title(f'NN Regression: Actual vs Predicted\n(R² = {r2:.4f})', fontsize=12)
+ax2.set_xlabel('Actual Values')
+ax2.set_ylabel('Predicted Values')
+ax2.grid(True, alpha=0.3)
+
+plt.tight_layout()
 plt.show()

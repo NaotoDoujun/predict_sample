@@ -67,27 +67,30 @@ print(f"R2 Score: {r2:.4f}")
 print(f"MSE     : {mse:.4f}")
 print(f"MAE     : {mae:.4f}")
 
-# Visualization - 1: Actual vs Predicted
-plt.figure(figsize=(14, 6))
+# Visualization
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))
 
-plt.subplot(1, 2, 1)
-plt.scatter(y_test, y_pred, alpha=0.5, color='teal', edgecolors='white')
-line_coords = [min(y_test.min(), y_pred.min()), max(y_test.max(), y_pred.max())]
-plt.plot(line_coords, line_coords, 'r--', lw=2, label='Ideal (y=x)')
-plt.title(f'RF Regression: Actual vs Predicted (R²={r2:.3f})')
-plt.xlabel('Actual')
-plt.ylabel('Predicted')
-plt.legend()
-plt.grid(True, alpha=0.3)
-
-# Visualization - 2: Feature Importance (Top 10)
-plt.subplot(1, 2, 2)
+# Feature Importance (Top 10)
 importances = model.feature_importances_
-indices = np.argsort(importances)[-10:] # Top 10 features
-plt.barh(range(len(indices)), importances[indices], color='darkblue', align='center')
-plt.yticks(range(len(indices)), [feature_names[i] for i in indices])
-plt.title('Top 10 Feature Importances')
-plt.xlabel('Relative Importance')
+indices = np.argsort(importances)[-10:] 
+names_top10 = [feature_names[i] for i in indices]
+
+ax1.barh(range(len(indices)), importances[indices], color='darkblue', align='center')
+ax1.set_yticks(range(len(indices)))
+ax1.set_yticklabels(names_top10)
+ax1.set_title('Top 10 Feature Importances', fontsize=12)
+ax1.set_xlabel('Relative Importance')
+ax1.grid(axis='x', linestyle='--', alpha=0.6)
+
+# Actual vs Predicted
+ax2.scatter(y_test, y_pred, alpha=0.5, color='teal', edgecolors='white', s=50)
+line_coords = [min(y_test.min(), y_pred.min()), max(y_test.max(), y_pred.max())]
+ax2.plot(line_coords, line_coords, 'r--', lw=2, label='Ideal (y=x)')
+ax2.set_title(f'RF Regression: Actual vs Predicted\n(R² = {r2:.3f})', fontsize=12)
+ax2.set_xlabel('Actual Values')
+ax2.set_ylabel('Predicted Values')
+ax2.legend()
+ax2.grid(True, alpha=0.3)
 
 plt.tight_layout()
 plt.show()
