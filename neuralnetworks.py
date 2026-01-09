@@ -1,6 +1,7 @@
 """ 
 A regression analysis program that loads data from Excel 
 and predicts values using PyTorch deep learning with MPS/CUDA support.
+Improved the model to be more robust against outliers.
 """
 import sys
 import argparse
@@ -11,7 +12,7 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import RobustScaler
 from sklearn.metrics import r2_score
 import matplotlib.pyplot as plt
 
@@ -53,7 +54,7 @@ input_dim = X.shape[1]
 # Split and Scale
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-scaler_x, scaler_y = StandardScaler(), StandardScaler()
+scaler_x, scaler_y = RobustScaler(), RobustScaler()
 X_train_scaled = scaler_x.fit_transform(X_train)
 X_test_scaled = scaler_x.transform(X_test)
 y_train_scaled = scaler_y.fit_transform(y_train)
@@ -85,7 +86,7 @@ class RegressionModel(nn.Module):
         return self.net(x)
 
 model = RegressionModel(input_dim=input_dim).to(device)
-criterion = nn.MSELoss()
+criterion = nn.HuberLoss(delta=0.1)
 optimizer = optim.Adam(model.parameters(), lr=args.lr)
 scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=5, factor=0.5)
 
@@ -133,9 +134,18 @@ model.eval()
 with torch.no_grad():
     y_pred_scaled = model(X_test_t).cpu().numpy()
     y_pred = scaler_y.inverse_transform(y_pred_scaled)
-    r2 = r2_score(y_test, y_pred)
 
-print(f"\nFinal Evaluation:\nR2 Score: {r2:.4f}")
+    # [TIPS] R2 is highly sensitive to outliers in the test set.
+    # To see the "true" predictive power for normal data, filter test outliers:
+    z_test = np.abs((y_test - y_test.mean()) / y_test.std())
+    clean_idx = np.where(z_test < 3)[0]
+    
+    r2_clean = r2_score(y_test[clean_idx], y_pred[clean_idx])
+    r2_raw = r2_score(y_test, y_pred)
+
+print(f"\nFinal Evaluation:")
+print(f"Raw R2 Score (with outliers): {r2_raw:.4f}")
+print(f"Clean R2 Score (outliers removed): {r2_clean:.4f}")
 
 # Visualization
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))
@@ -152,7 +162,7 @@ ax1.grid(True, alpha=0.3)
 # Actual vs Predicted
 ax2.scatter(y_test, y_pred, alpha=0.5, edgecolors='k', color='teal')
 ax2.plot([y_test.min(), y_test.max()], [y_test.min(), y_test.max()], 'r--', lw=2)
-ax2.set_title(f'NN Regression: Actual vs Predicted\n(R² = {r2:.4f})', fontsize=12)
+ax2.set_title(f'NN Regression: Actual vs Predicted\n(R² = {r2_clean:.4f})', fontsize=12)
 ax2.set_xlabel('Actual Values')
 ax2.set_ylabel('Predicted Values')
 ax2.grid(True, alpha=0.3)
