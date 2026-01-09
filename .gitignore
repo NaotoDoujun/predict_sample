@@ -4,6 +4,7 @@
 sample_data.xlsx
 nn_model.pth
 rf_model.pkl
+lgbm_model.pkl
 
 # Created by https://www.gitignore.io/api/macos,linux,django,python,pycharm
 

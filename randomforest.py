@@ -61,9 +61,14 @@ y_pred = model.predict(X_test)
 mse = mean_squared_error(y_test, y_pred)
 mae = mean_absolute_error(y_test, y_pred)
 r2 = r2_score(y_test, y_pred)
+# Clean R2 for comparison (filtering test outliers)
+z_test = np.abs((y_test - y_test.mean()) / y_test.std())
+clean_idx = np.where(z_test < 3)[0]
+r2_clean = r2_score(y_test[clean_idx], y_pred[clean_idx])
 
 print(f"\n--- Performance Metrics ---")
-print(f"R2 Score: {r2:.4f}")
+print(f"RF Raw R2: {r2:.4f}")
+print(f"RF Clean R2: {r2_clean:.4f}")
 print(f"MSE     : {mse:.4f}")
 print(f"MAE     : {mae:.4f}")
 
